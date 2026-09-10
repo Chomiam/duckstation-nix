@@ -154,6 +154,9 @@ stdenv.mkDerivation rec {
     # Neutralisation du contrôle d'environnement hostile
     sed -i 's/message(FATAL_ERROR "Unsupported environment.")/message(STATUS "Building on NixOS")/g' $sourceRoot/CMakeModules/DuckStationBuildSummary.cmake
 
+    # Désactivation du popup d'avertissement LD_LIBRARY_PATH
+    sed -i 's/void QtHost::WarnAboutLDLibraryPath()/void QtHost::WarnAboutLDLibraryPath() { return; } void QtHost::_Disabled_WarnAboutLDLibraryPath()/g' $sourceRoot/src/duckstation-qt/qthost.cpp
+
     # Configuration des RPATH pour tous les binaires et bibliothèques précompilés Qt
     ORIGIN='$ORIGIN'
     for bin in $(find $sourceRoot/dep/prebuilt/linux-x64 -type f -executable); do
@@ -246,7 +249,6 @@ DESKTOP_EOF
 
   postFixup = ''
     wrapProgram $out/share/duckstation/duckstation-qt \
-      --prefix LD_LIBRARY_PATH : "$out/share/duckstation/lib:${libPath}:${lib.makeLibraryPath buildInputs}" \
       --prefix QT_PLUGIN_PATH : "$out/share/duckstation/plugins" \
       --prefix PATH : "${lib.makeBinPath [ vulkan-loader ]}"
   '';
