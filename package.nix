@@ -6,6 +6,8 @@
 , ninja
 , pkg-config
 , llvmPackages
+, kdePackages
+, curl
 , libX11
 , libXrandr
 , libXext
@@ -13,6 +15,13 @@
 , libXi
 , libXinerama
 , libXxf86vm
+, libxcb
+, libxcb-util
+, libxcb-image
+, libxcb-keysyms
+, libxcb-render-util
+, libxcb-wm
+, libxcb-cursor
 , wayland
 , wayland-protocols
 , libxkbcommon
@@ -24,7 +33,7 @@
 , pipewire
 , libpulseaudio
 , libevdev
-, udev
+, systemd
 , libdecor
 , makeWrapper
 , autoPatchelfHook
@@ -65,6 +74,7 @@ stdenv.mkDerivation rec {
     cmake
     ninja
     pkg-config
+    kdePackages.extra-cmake-modules
     llvmPackages.clang
     llvmPackages.lld
     makeWrapper
@@ -72,6 +82,7 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
+    curl
     libX11
     libXrandr
     libXext
@@ -79,6 +90,13 @@ stdenv.mkDerivation rec {
     libXi
     libXinerama
     libXxf86vm
+    libxcb
+    libxcb-util
+    libxcb-image
+    libxcb-keysyms
+    libxcb-render-util
+    libxcb-wm
+    libxcb-cursor
     wayland
     wayland-protocols
     libxkbcommon
@@ -90,7 +108,7 @@ stdenv.mkDerivation rec {
     pipewire
     libpulseaudio
     libevdev
-    udev
+    systemd
     libdecor
   ];
 
