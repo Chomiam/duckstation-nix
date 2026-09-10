@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ChomiamOS Project
+
 {
   description = "Paquet Nix officiel pour l'émulateur PlayStation 1 DuckStation (ChomiamOS)";
 

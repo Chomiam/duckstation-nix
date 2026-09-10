@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ChomiamOS Project
+
 { lib
 , llvmPackages
 , gcc
@@ -256,7 +259,7 @@ DESKTOP_EOF
   meta = with lib; {
     description = "Fast and accurate PlayStation 1 (PSX) emulator";
     homepage = "https://github.com/stenzek/duckstation";
-    license = licenses.unfree;
+    license = licenses.gpl3Plus;
     platforms = [ "x86_64-linux" ];
     mainProgram = "duckstation-qt";
   };
