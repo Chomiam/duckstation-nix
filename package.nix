@@ -184,7 +184,7 @@ stdenv.mkDerivation rec {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p $out/bin $out/share/duckstation $out/share/applications $out/share/icons/hicolor/512x512/apps
+    mkdir -p $out/bin $out/share/duckstation/lib $out/share/applications $out/share/icons/hicolor/512x512/apps
 
     # Copie du binaire Qt
     cp bin/duckstation-qt $out/share/duckstation/duckstation-qt
@@ -192,10 +192,14 @@ stdenv.mkDerivation rec {
     ln -s $out/share/duckstation/duckstation-qt $out/bin/duckstation
     ln -s $out/share/duckstation/duckstation-qt $out/bin/duckstation-nogui
 
-    # Copie des bibliothèques précompilées indispensables au runtime
+    # Copie uniquement des bibliothèques dynamiques .so (évite les fichiers .o et .a)
     if [ -d ../dep/prebuilt/linux-x64/lib ]; then
-      mkdir -p $out/share/duckstation/lib
-      cp -a ../dep/prebuilt/linux-x64/lib/* $out/share/duckstation/lib/
+      find ../dep/prebuilt/linux-x64/lib -maxdepth 1 \( -type f -o -type l \) -name "*.so*" -exec cp -d {} $out/share/duckstation/lib/ \;
+    fi
+
+    # Copie des plugins Qt précompilés (plateformes Wayland/XCB, etc.)
+    if [ -d ../dep/prebuilt/linux-x64/plugins ]; then
+      cp -r ../dep/prebuilt/linux-x64/plugins $out/share/duckstation/
     fi
 
     # Copie des ressources
@@ -230,12 +234,20 @@ DESKTOP_EOF
   '';
 
   preFixup = ''
+    ORIGIN='$ORIGIN'
+    RUNTIME_RPATH="$ORIGIN/lib:$out/share/duckstation/lib:${libPath}:${lib.makeLibraryPath buildInputs}"
+    patchelf --set-rpath "$RUNTIME_RPATH" "$out/share/duckstation/duckstation-qt"
+
     addAutoPatchelfSearchPath "$out/share/duckstation/lib"
+    if [ -d "$out/share/duckstation/plugins" ]; then
+      addAutoPatchelfSearchPath "$out/share/duckstation/plugins"
+    fi
   '';
 
   postFixup = ''
     wrapProgram $out/share/duckstation/duckstation-qt \
-      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath (buildInputs ++ [ gcc.cc.lib glib pcre2.out zstd zlib fontconfig dbus libva ])}:$out/share/duckstation/lib" \
+      --prefix LD_LIBRARY_PATH : "$out/share/duckstation/lib:${libPath}:${lib.makeLibraryPath buildInputs}" \
+      --prefix QT_PLUGIN_PATH : "$out/share/duckstation/plugins" \
       --prefix PATH : "${lib.makeBinPath [ vulkan-loader ]}"
   '';
 
