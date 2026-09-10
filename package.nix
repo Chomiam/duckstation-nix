@@ -1,5 +1,6 @@
 { lib
 , llvmPackages
+, gcc
 , fetchFromGitHub
 , fetchurl
 , cmake
@@ -74,6 +75,17 @@ let
     hash = "sha256-V3Si+2kcZyeuACPh1GD0Ekedt9+S4kcZPBPwd3NMbi0=";
   };
 
+  libPath = lib.makeLibraryPath [
+    gcc.cc.lib
+    glib
+    pcre2.out
+    zstd
+    zlib
+    fontconfig
+    dbus
+    libva
+  ];
+
 in
 stdenv.mkDerivation rec {
   pname = "duckstation";
@@ -93,6 +105,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     curl
+    gcc.cc.lib
     glib
     pcre2.out
     zstd
@@ -141,15 +154,21 @@ stdenv.mkDerivation rec {
     # Neutralisation du contrôle d'environnement hostile
     sed -i 's/message(FATAL_ERROR "Unsupported environment.")/message(STATUS "Building on NixOS")/g' $sourceRoot/CMakeModules/DuckStationBuildSummary.cmake
 
-    # Patch de l'interpréteur des outils de build Qt précompilés (moc, uic, rcc, lrelease, etc.)
+    # Configuration des RPATH pour tous les binaires et bibliothèques précompilés Qt
+    ORIGIN='$ORIGIN'
     for bin in $(find $sourceRoot/dep/prebuilt/linux-x64 -type f -executable); do
       patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$bin" 2>/dev/null || true
+      patchelf --set-rpath "$ORIGIN/../lib:${libPath}" "$bin" 2>/dev/null || true
+    done
+
+    for so in $(find $sourceRoot/dep/prebuilt/linux-x64/lib -type f -name "*.so*"); do
+      patchelf --set-rpath "$ORIGIN:${libPath}" "$so" 2>/dev/null || true
     done
   '';
 
   preConfigure = ''
     PREBUILT_LIB="$(find "$NIX_BUILD_TOP" -type d -path '*/dep/prebuilt/linux-x64/lib' | head -n 1)"
-    export LD_LIBRARY_PATH="$PREBUILT_LIB:${lib.makeLibraryPath [ glib pcre2.out zstd zlib fontconfig dbus libva stdenv.cc.cc.lib stdenv.cc.libc ]}:''${LD_LIBRARY_PATH:-}"
+    export LD_LIBRARY_PATH="$PREBUILT_LIB:${libPath}:''${LD_LIBRARY_PATH:-}"
   '';
 
   cmakeFlags = [
@@ -212,7 +231,7 @@ DESKTOP_EOF
 
   postFixup = ''
     wrapProgram $out/share/duckstation/duckstation-qt \
-      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath (buildInputs ++ [ glib pcre2.out zstd zlib fontconfig dbus libva ])}:$out/share/duckstation/lib" \
+      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath (buildInputs ++ [ gcc.cc.lib glib pcre2.out zstd zlib fontconfig dbus libva ])}:$out/share/duckstation/lib" \
       --prefix PATH : "${lib.makeBinPath [ vulkan-loader ]}"
   '';
 
