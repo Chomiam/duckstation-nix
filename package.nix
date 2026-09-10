@@ -118,6 +118,9 @@ stdenv.mkDerivation rec {
     cp ${cheats} $sourceRoot/data/resources/cheats.zip
     cp ${patches} $sourceRoot/data/resources/patches.zip
     chmod -R u+w $sourceRoot/dep/prebuilt
+
+    # Neutralisation du contrôle d'environnement hostile
+    sed -i 's/message(FATAL_ERROR "Unsupported environment.")/message(STATUS "Building on NixOS")/g' $sourceRoot/CMakeModules/DuckStationBuildSummary.cmake
   '';
 
   cmakeFlags = [
