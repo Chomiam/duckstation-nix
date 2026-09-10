@@ -1,12 +1,11 @@
 { lib
-, stdenv
+, llvmPackages
 , fetchFromGitHub
 , fetchurl
 , cmake
 , ninja
 , pkg-config
 , patchelf
-, llvmPackages
 , kdePackages
 , curl
 , libX11
@@ -41,6 +40,7 @@
 }:
 
 let
+  stdenv = llvmPackages.stdenv;
   version = "3b30876";
   prebuiltVersion = "release-20260906";
 
@@ -77,7 +77,6 @@ stdenv.mkDerivation rec {
     pkg-config
     patchelf
     kdePackages.extra-cmake-modules
-    llvmPackages.clang
     llvmPackages.lld
     makeWrapper
     autoPatchelfHook
@@ -133,8 +132,7 @@ stdenv.mkDerivation rec {
 
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
-    "-DCMAKE_C_COMPILER=clang"
-    "-DCMAKE_CXX_COMPILER=clang++"
+    "-DCMAKE_CXX_SCAN_FOR_MODULES=OFF"
     "-DCMAKE_EXE_LINKER_FLAGS_INIT=-fuse-ld=lld"
     "-DCMAKE_MODULE_LINKER_FLAGS_INIT=-fuse-ld=lld"
     "-DCMAKE_SHARED_LINKER_FLAGS_INIT=-fuse-ld=lld"
