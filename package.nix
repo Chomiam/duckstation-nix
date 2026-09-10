@@ -5,6 +5,7 @@
 , cmake
 , ninja
 , pkg-config
+, patchelf
 , llvmPackages
 , kdePackages
 , curl
@@ -74,6 +75,7 @@ stdenv.mkDerivation rec {
     cmake
     ninja
     pkg-config
+    patchelf
     kdePackages.extra-cmake-modules
     llvmPackages.clang
     llvmPackages.lld
@@ -121,6 +123,12 @@ stdenv.mkDerivation rec {
 
     # Neutralisation du contrôle d'environnement hostile
     sed -i 's/message(FATAL_ERROR "Unsupported environment.")/message(STATUS "Building on NixOS")/g' $sourceRoot/CMakeModules/DuckStationBuildSummary.cmake
+
+    # Patch des outils de build Qt précompilés (moc, uic, rcc, lrelease, etc.)
+    for bin in $(find $sourceRoot/dep/prebuilt/linux-x64 -type f -executable); do
+      patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$bin" 2>/dev/null || true
+      patchelf --set-rpath "$sourceRoot/dep/prebuilt/linux-x64/lib:${stdenv.cc.cc.lib}/lib" "$bin" 2>/dev/null || true
+    done
   '';
 
   cmakeFlags = [
