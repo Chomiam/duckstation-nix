@@ -184,7 +184,7 @@ stdenv.mkDerivation rec {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p $out/bin $out/share/duckstation $out/share/applications $out/share/icons/hicolor/scalable/apps
+    mkdir -p $out/bin $out/share/duckstation $out/share/applications $out/share/icons/hicolor/512x512/apps
 
     # Copie du binaire Qt
     cp bin/duckstation-qt $out/share/duckstation/duckstation-qt
@@ -207,7 +207,11 @@ stdenv.mkDerivation rec {
     fi
 
     # Raccourci de bureau et icône
-    install -m 644 ../data/resources/duckstation.png $out/share/icons/hicolor/scalable/apps/duckstation.png
+    if [ -f ../scripts/appimage/org.duckstation.DuckStation.png ]; then
+      install -m 644 ../scripts/appimage/org.duckstation.DuckStation.png $out/share/icons/hicolor/512x512/apps/duckstation.png
+      install -m 644 ../scripts/appimage/org.duckstation.DuckStation.png $out/share/icons/hicolor/512x512/apps/org.duckstation.DuckStation.png
+    fi
+
     cat << 'DESKTOP_EOF' > $out/share/applications/duckstation.desktop
 [Desktop Entry]
 Type=Application
