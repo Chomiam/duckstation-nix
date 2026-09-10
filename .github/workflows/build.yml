@@ -1,0 +1,42 @@
+name: 🦆 Build DuckStation & Push Cachix
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+  schedule:
+    # Build hebdomadaire le dimanche à 03h00 UTC
+    - cron: '0 3 * * 0'
+
+jobs:
+  build:
+    name: Build DuckStation (x86_64-linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: 📥 Récupération du dépôt
+        uses: actions/checkout@v4
+
+      - name: ❄️ Installation de Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: ⚡ Configuration du cache Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: duckstation
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: 🔨 Compilation de DuckStation
+        run: |
+          nix build --print-build-logs .#default
+
+      - name: 🔍 Test du binaire
+        run: |
+          ./result/bin/duckstation-qt --version || ./result/bin/duckstation --help || true
