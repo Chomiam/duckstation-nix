@@ -155,7 +155,7 @@ stdenv.mkDerivation rec {
     sed -i 's/message(FATAL_ERROR "Unsupported environment.")/message(STATUS "Building on NixOS")/g' $sourceRoot/CMakeModules/DuckStationBuildSummary.cmake
 
     # Désactivation du popup d'avertissement LD_LIBRARY_PATH
-    sed -i 's/void QtHost::WarnAboutLDLibraryPath()/void QtHost::WarnAboutLDLibraryPath() { return; } void QtHost::_Disabled_WarnAboutLDLibraryPath()/g' $sourceRoot/src/duckstation-qt/qthost.cpp
+    sed -i '/void QtHost::WarnAboutLDLibraryPath()/{n;s/{/{\n  return;/}' $sourceRoot/src/duckstation-qt/qthost.cpp
 
     # Configuration des RPATH pour tous les binaires et bibliothèques précompilés Qt
     ORIGIN='$ORIGIN'
