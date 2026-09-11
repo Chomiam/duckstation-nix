@@ -87,6 +87,14 @@ let
     fontconfig
     dbus
     libva
+    wayland          # libwayland-egl.so.1 (dlopen par DuckStation)
+    libxkbcommon     # libxkbcommon.so.0 (dlopen par DuckStation)
+    libGL            # libGLX.so.0, libOpenGL.so.0 (dlopen par DuckStation)
+    alsa-lib         # libasound.so.2 (dlopen par DuckStation)
+    libpulseaudio    # libpulse.so.0 (dlopen par DuckStation)
+    vulkan-loader    # libvulkan.so (dlopen par DuckStation)
+    libdrm           # libdrm (EGL/DRM backend)
+    curl             # libcurl.so.4 (dlopen par DuckStation)
   ];
 
 in
@@ -253,7 +261,8 @@ DESKTOP_EOF
   postFixup = ''
     wrapProgram $out/share/duckstation/duckstation-qt \
       --prefix QT_PLUGIN_PATH : "$out/share/duckstation/plugins" \
-      --prefix PATH : "${lib.makeBinPath [ vulkan-loader ]}"
+      --prefix PATH : "${lib.makeBinPath [ vulkan-loader ]}" \
+      --prefix LD_LIBRARY_PATH : "${libPath}"
   '';
 
   meta = with lib; {
