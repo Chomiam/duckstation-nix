@@ -168,6 +168,18 @@ stdenv.mkDerivation rec {
     # Désactivation du popup d'avertissement LD_LIBRARY_PATH
     sed -i '/void QtHost::WarnAboutLDLibraryPath()/{n;s/{/{\n  return;/}' $sourceRoot/src/duckstation-qt/qthost.cpp
 
+    # Marquage du build comme release officielle (fournit src/scmversion/tag.h comme dans l'amont)
+    mkdir -p $sourceRoot/src/scmversion
+    cat << 'TAG_EOF' > $sourceRoot/src/scmversion/tag.h
+#pragma once
+#define UPDATER_RELEASE_CHANNEL "latest"
+#define UPDATER_RELEASE_IS_OFFICIAL 1
+TAG_EOF
+
+    # Désactivation du popup d'avertissement 'Unofficial Build Warning'
+    sed -i '/void AutoUpdaterDialog::warnAboutUnofficialBuild()/{n;s/{/{\n  return;/}' $sourceRoot/src/duckstation-qt/autoupdaterdialog.cpp
+    sed -i 's/AutoUpdaterDialog::warnAboutUnofficialBuild();/\/\/ AutoUpdaterDialog::warnAboutUnofficialBuild();/' $sourceRoot/src/duckstation-qt/qthost.cpp
+
     # Configuration des RPATH pour tous les binaires et bibliothèques précompilés Qt
     ORIGIN='$ORIGIN'
     for bin in $(find $sourceRoot/dep/prebuilt/linux-x64 -type f -executable); do
