@@ -180,6 +180,14 @@ TAG_EOF
     sed -i '/void AutoUpdaterDialog::warnAboutUnofficialBuild()/{n;s/{/{\n  return;/}' $sourceRoot/src/duckstation-qt/autoupdaterdialog.cpp
     sed -i 's/AutoUpdaterDialog::warnAboutUnofficialBuild();/\/\/ AutoUpdaterDialog::warnAboutUnofficialBuild();/' $sourceRoot/src/duckstation-qt/qthost.cpp
 
+    # Désactivation complète de la vérification automatique des mises à jour (géré par NixOS / GitHub Actions)
+    sed -i 's/g_main_window->startupUpdateCheck();/\/\/ g_main_window->startupUpdateCheck();/' $sourceRoot/src/duckstation-qt/qthost.cpp
+    sed -i '/void MainWindow::startupUpdateCheck()/{n;s/{/{\n  return;/}' $sourceRoot/src/duckstation-qt/mainwindow.cpp
+    sed -i '/void MainWindow::checkForUpdates(bool display_message, bool ignore_skipped_updates)/{n;s/{/{\n  return;/}' $sourceRoot/src/duckstation-qt/mainwindow.cpp
+    sed -i '/void AutoUpdaterDialog::queueUpdateCheck(bool display_errors, bool ignore_skipped_updates)/{n;s/{/{\n  emit updateCheckCompleted(false);\n  return;/}' $sourceRoot/src/duckstation-qt/autoupdaterdialog.cpp
+    sed -i 's/connect(m_ui.actionCheckForUpdates, &QAction::triggered/m_ui.actionCheckForUpdates->setVisible(false);\n  connect(m_ui.actionCheckForUpdates, \&QAction::triggered/' $sourceRoot/src/duckstation-qt/mainwindow.cpp
+    sed -i '/m_ui.autoUpdateCurrentVersion->setText/a \    m_ui.updatesGroup->setVisible(false);' $sourceRoot/src/duckstation-qt/interfacesettingswidget.cpp
+
     # Configuration des RPATH pour tous les binaires et bibliothèques précompilés Qt
     ORIGIN='$ORIGIN'
     for bin in $(find $sourceRoot/dep/prebuilt/linux-x64 -type f -executable); do
