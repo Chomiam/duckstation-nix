@@ -53,14 +53,14 @@
 
 let
   stdenv = llvmPackages.stdenv;
-  version = "3b30876";
+  version = "c66b269";
   prebuiltVersion = "release-20260906";
 
   src = fetchFromGitHub {
     owner = "stenzek";
     repo = "duckstation";
-    rev = "3b30876e92f28faeaba06bcfa562939c7107961e";
-    hash = "sha256-/+DlPeNEwIrjph9Nur3c/n655n/ctWRB49ckg50dW/s=";
+    rev = "c66b2694da65cece8886ed3d4a069098831f8358";
+    hash = "sha256-m6nWabiVe+7BOPCAG9y1dnp5PbVdnBbhyn3Xu7mo2TM=";
   };
 
   prebuiltDeps = fetchurl {

@@ -1,0 +1,56 @@
+name: 🦆 Weekly Upstream Check & Build
+
+on:
+  schedule:
+    # Chaque lundi matin à 04h00 UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-build:
+    name: Check Upstream & Build Cachix
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: 📥 Récupération du dépôt
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ❄️ Installation de Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: ⚡ Configuration du cache Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: duckstation
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: 🔍 Vérification des nouvelles versions amont
+        id: updater
+        run: |
+          python3 scripts/update-duckstation.py
+
+      - name: 🔨 Compilation & Mise en cache Cachix
+        if: steps.updater.outputs.has_update == 'true'
+        run: |
+          echo "🔨 Compilation de la nouvelle version ${{ steps.updater.outputs.new_version }}..."
+          nix build --print-build-logs .#default
+          ./result/bin/duckstation-qt --version || ./result/bin/duckstation --help || true
+
+      - name: 🚀 Publication du commit sur GitHub
+        if: steps.updater.outputs.has_update == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.nix
+          git commit -m "chore(upstream): update DuckStation to ${{ steps.updater.outputs.new_version }} (${{ steps.updater.outputs.new_commit }})"
+          git push origin main
